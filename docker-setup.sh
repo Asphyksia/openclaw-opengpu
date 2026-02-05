@@ -178,6 +178,55 @@ docker build \
   "$ROOT_DIR"
 
 echo ""
+echo "==> LLM Provider Configuration"
+echo ""
+echo "OpenClaw requires an LLM provider to function."
+echo ""
+echo "Recommended: OpenGPU Relay"
+echo "  - Decentralized, cost-effective (~$2-5/mo vs $20-30/mo)"
+echo "  - Multiple open-source models (GPT-OSS 120B, Llama 3.2, DeepSeek R1)"
+echo "  - Get your API key at https://relaygpu.com"
+echo ""
+echo "Alternative: Configure Anthropic/OpenAI manually later"
+echo ""
+
+# Check if OpenGPU is already configured
+if [[ -f "$ENV_FILE" ]] && grep -q "OPENGPU_API_KEY" "$ENV_FILE" 2>/dev/null; then
+  echo "✓ OpenGPU Relay already configured (API key found in .env)"
+  echo ""
+  echo "To reconfigure OpenGPU, run: ./scripts/configure-opengpu.sh"
+  echo ""
+else
+  echo -n "Configure OpenGPU Relay now? [Y/n]: "
+  read -r configure_opengpu
+  configure_opengpu=${configure_opengpu:-Y}
+
+  if [[ "$configure_opengpu" == "Y" || "$configure_opengpu" == "y" || "$configure_opengpu" == "" ]]; then
+    echo ""
+    if [[ -x "$ROOT_DIR/scripts/configure-opengpu.sh" ]]; then
+      "$ROOT_DIR/scripts/configure-opengpu.sh"
+      echo ""
+    elif [[ -x "$ROOT_DIR/scripts/configure-opengpu.ps1" ]]; then
+      echo "Please run: .\scripts\configure-opengpu.ps1"
+      echo "Then run: .\docker-setup.sh again"
+      exit 0
+    else
+      echo "⚠ OpenGPU configuration script not found."
+      echo "  You can configure OpenGPU later with: ./scripts/configure-opengpu.sh"
+      echo "  Or configure another provider manually during onboarding."
+      echo ""
+    fi
+  else
+    echo ""
+    echo "⚠ Skipping OpenGPU configuration."
+    echo "  You'll need to configure an LLM provider (Anthropic, OpenAI, etc.)"
+    echo "  during the onboarding wizard."
+    echo ""
+    echo "  To configure OpenGPU later, run: ./scripts/configure-opengpu.sh"
+    echo ""
+  fi
+fi
+
 echo "==> Onboarding (interactive)"
 echo "When prompted:"
 echo "  - Gateway bind: lan"

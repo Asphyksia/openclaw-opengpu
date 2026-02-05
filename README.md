@@ -41,6 +41,34 @@ Model note: while any model is supported, I strongly recommend **Anthropic Pro/M
 - Models config + CLI: [Models](https://docs.openclaw.ai/concepts/models)
 - Auth profile rotation (OAuth vs API keys) + fallbacks: [Model failover](https://docs.openclaw.ai/concepts/model-failover)
 
+### 💰 Cost-Effective Alternative: OpenGPU Relay
+
+**Looking for a more affordable option?** OpenClaw integrates with [OpenGPU Network](https://opengpu.network/)'s Relay API — a decentralized LLM network that's **~10x cheaper** than traditional APIs:
+
+| Provider | Cost (monthly) | Models |
+|----------|---------------|---------|
+| **Anthropic Claude Pro** | $20-30 | Claude Sonnet/Opus |
+| **OpenAI ChatGPT Plus** | $20 | GPT-4 |
+| **OpenGPU Relay** | ~$2-5 (pay-as-you-go) | GPT-OSS 120B, Llama 3.2, DeepSeek R1 |
+
+**Quick setup with OpenGPU:**
+
+```bash
+git clone https://github.com/openclaw/openclaw.git
+cd openclaw
+
+# Run the OpenGPU configuration script
+./scripts/configure-opengpu.sh  # Linux/macOS/WSL
+# or: .\scripts\configure-opengpu.ps1  # Windows
+
+# Then start OpenClaw
+./docker-setup.sh
+```
+
+Get your API key at [relaygpu.com](https://relaygpu.com).
+
+📖 **Full guide:** [OpenGPU Integration Documentation](docs/opengpu-integration.md)
+
 ## Install (recommended)
 
 Runtime: **Node ≥22**.
