@@ -24,7 +24,7 @@ OpenClaw now integrates with [OpenGPU Network](https://opengpu.network/)'s Relay
 - Docker with Docker Compose v2
 - OpenGPU Relay API Key from [relaygpu.com](https://relaygpu.com)
 
-### Installation (Linux/macOS/WSL)
+### Installation (Linux/macOS/WSL2)
 
 ```bash
 # 1. Clone OpenClaw repository
@@ -43,7 +43,20 @@ cd openclaw
 ./docker-setup.sh
 ```
 
-### Installation (Windows/PowerShell)
+### Installation (Windows)
+
+#### Recommended: WSL2 (Ubuntu)
+
+```bash
+# Run these commands inside your Ubuntu/WSL2 terminal
+git clone https://github.com/openclaw/openclaw.git
+cd openclaw
+
+./scripts/configure-opengpu.sh
+./docker-setup.sh
+```
+
+#### Alternative: PowerShell + Docker Desktop (advanced)
 
 ```powershell
 # 1. Clone OpenClaw repository
@@ -52,11 +65,12 @@ cd openclaw
 
 # 2. Run the OpenGPU configuration script
 .\scripts\configure-opengpu.ps1
+```
 
-# 3. Follow the prompts (same as above)
+Then, from Git Bash or your WSL2 terminal in the same directory, start OpenClaw:
 
-# 4. Start OpenClaw
-.\docker-setup.sh
+```bash
+./docker-setup.sh
 ```
 
 ## Available Models
@@ -214,6 +228,66 @@ Dangerous commands require manual approval:
 }
 ```
 
+### 4. DM Pairing & Channel Allowlists
+
+DM pairing is enabled by default so that unknown users cannot message your assistant directly without approval.
+
+If you want to make it easier for **your own accounts** to talk to the assistant while keeping everyone else in pairing mode, you can add an allowlist for each channel:
+
+```json5
+{
+  channels: {
+    whatsapp: {
+      dmPolicy: "pairing",
+      allowFrom: ["+15555550123"], // your own phone number
+    },
+    telegram: {
+      dmPolicy: "pairing",
+      allowFrom: ["@your_telegram_username"],
+    },
+    discord: {
+      dmPolicy: "pairing",
+      allowFrom: ["123456789012345678"], // your Discord user ID
+    },
+  },
+}
+```
+
+This keeps the **secure default** (pairing for everyone) while making it frictionless for your own accounts.
+
+### 5. Security & Secrets
+
+- Your OpenGPU API key is stored locally in:
+  - the project root `.env` file (as `OPENGPU_API_KEY`)
+  - your OpenClaw config at `~/.openclaw/openclaw.json`
+- **Never commit these files to git.** Before pushing to GitHub, make sure:
+  - `.env` and any `.env.backup.*` files are listed in your `.gitignore`
+  - you have not staged or committed them.
+- If an API key is ever pushed to a public repository:
+  1. Revoke it from the [relaygpu.com](https://relaygpu.com) dashboard.
+  2. Generate a new key.
+  3. Re‑run the OpenGPU configuration script with the new key.
+
+### 6. Gateway Binding & Remote Access
+
+By default the Docker gateway binds to **loopback**, which means:
+
+- the Control UI and WebSocket API are only accessible from the same machine
+- this is the safest default for new users and single‑machine setups
+
+To expose the gateway on your local network (LAN), you can:
+
+1. Set `OPENCLAW_GATEWAY_BIND=lan` in your `.env` file.
+2. Re‑run `./docker-setup.sh` to regenerate Docker Compose config.
+3. Make sure you trust your local network and keep the gateway token secret.
+
+For safe remote access across devices or the internet, prefer:
+
+- [Tailscale Serve/Funnel](https://docs.openclaw.ai/gateway/tailscale)
+- [SSH tunnels](https://docs.openclaw.ai/gateway/remote)
+
+instead of exposing the gateway directly to the public internet.
+
 ## Channel Setup
 
 After configuring OpenGPU, you can add chat channels:
@@ -247,13 +321,13 @@ docker compose run --rm openclaw-cli channels add --channel discord --token "you
 ### Test OpenGPU Connection
 
 ```bash
-# Linux/macOS/WSL
+# Linux/macOS/WSL2
 ./scripts/configure-opengpu.sh
-# Select option 4: Test OpenGPU connection
+# From the menu, choose: 3) Test OpenGPU connection
 
 # Windows
 .\scripts\configure-opengpu.ps1
-# Select option 4: Test OpenGPU connection
+# From the menu, choose: 3) Test OpenGPU connection
 ```
 
 ### Test OpenClaw Gateway

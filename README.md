@@ -69,6 +69,33 @@ Get your API key at [relaygpu.com](https://relaygpu.com).
 
 📖 **Full guide:** [OpenGPU Integration Documentation](docs/opengpu-integration.md)
 
+## OpenGPU Docker Quickstart
+
+The simplest way to run OpenClaw with OpenGPU Relay is via Docker.
+
+**Linux / macOS / WSL2 (recommended)**
+
+```bash
+git clone https://github.com/openclaw/openclaw.git
+cd openclaw
+
+./docker-setup.sh
+```
+
+This script will:
+
+- build the `openclaw:local` Docker image
+- guide you through the onboarding wizard (gateway, auth, channels)
+- optionally configure OpenGPU Relay if no API key is set yet.
+
+**Windows (recommended: WSL2)**
+
+1. Install WSL2 with an Ubuntu distribution and Docker Desktop with WSL integration enabled.
+2. Open the Ubuntu/WSL2 terminal.
+3. Run the same commands as in the Linux / macOS / WSL2 section above.
+
+For more details and manual configuration options, see the [OpenGPU Relay Integration](docs/opengpu-integration.md) guide.
+
 ## Install (recommended)
 
 Runtime: **Node ≥22**.

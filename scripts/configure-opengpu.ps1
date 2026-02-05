@@ -1,45 +1,51 @@
 # OpenGPU Relay Configuration Script for OpenClaw (Windows/PowerShell)
-# This script configures OpenClaw to use OpenGPU Network's Relay API
-
 $ErrorActionPreference = "Stop"
 
-# Get script directory
+# Get paths
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ProjectRoot = Split-Path -Parent $ScriptDir
 $ConfigDir = if ($env:OPENCLAW_CONFIG_DIR) { $env:OPENCLAW_CONFIG_DIR } else { "$env:USERPROFILE\.openclaw" }
 $ConfigFile = Join-Path $ConfigDir "openclaw.json"
 $EnvFile = Join-Path $ProjectRoot ".env"
 
+# Print functions
 function Print-Header {
-    Write-Host @"
-
-========================================
-  OpenClaw + OpenGPU Relay Setup
-========================================
-
-"@ -ForegroundColor Cyan
+    Clear-Host
+    Write-Host ""
+    Write-Host "========================================" -ForegroundColor Cyan
+    Write-Host "  OpenClaw + OpenGPU Relay Setup" -ForegroundColor Cyan
+    Write-Host "========================================" -ForegroundColor Cyan
+    Write-Host ""
 }
 
 function Print-Success {
     param([string]$Message)
-    Write-Host "✓ $Message" -ForegroundColor Green
+    Write-Host "[OK] $Message" -ForegroundColor Green
 }
 
 function Print-Error {
     param([string]$Message)
-    Write-Host "✗ $Message" -ForegroundColor Red
-}
-
-function Print-Warning {
-    param([string]$Message)
-    Write-Host "⚠ $Message" -ForegroundColor Yellow
+    Write-Host "[ERROR] $Message" -ForegroundColor Red
 }
 
 function Print-Info {
     param([string]$Message)
-    Write-Host "ℹ $Message" -ForegroundColor Cyan
+    Write-Host "[INFO] $Message" -ForegroundColor Cyan
 }
 
+# Show main menu
+function Show-Menu {
+    Write-Host ""
+    Write-Host "OpenGPU Relay Configuration Menu:" -ForegroundColor Cyan
+    Write-Host "  1) Configure or update OpenGPU (API key + default model)"
+    Write-Host "  2) View current configuration"
+    Write-Host "  3) Test OpenGPU connection"
+    Write-Host "  4) Remove OpenGPU configuration"
+    Write-Host "  5) Exit"
+    Write-Host ""
+}
+
+# Test OpenGPU API key
 function Test-OpenGpuKey {
     param([string]$ApiKey)
 
@@ -63,9 +69,11 @@ function Test-OpenGpuKey {
     }
 }
 
+# Get API key from user
 function Get-OpenGpuApiKey {
     while ($true) {
-        $apiKey = Read-Host "Enter your OpenGPU Relay API Key (from https://relaygpu.com)" -MaskInput
+        Write-Host ""
+        $apiKey = Read-Host "Enter your OpenGPU Relay API Key (from https://relaygpu.com)"
 
         if ([string]::IsNullOrWhiteSpace($apiKey)) {
             Print-Error "API key cannot be empty"
@@ -76,26 +84,26 @@ function Get-OpenGpuApiKey {
             return $apiKey
         }
 
-        $retry = Read-Host "Would you like to try again? (y/n)"
+        $retry = Read-Host "Try again? (y/n)"
         if ($retry -ne "y" -and $retry -ne "Y") {
-            throw "Configuration cancelled"
+            throw "Configuration cancelled by user"
         }
     }
 }
 
+# Select model
 function Select-Model {
-    Write-Host @"
-
-Select your default model:
-  1) gpt-oss-120b (120B parameters, powerful but slower) - Recommended
-  2) gpt-oss-20b  (20B parameters, faster and cheaper)
-  3) llama-3.2-3b (3B parameters, fastest and cheapest)
-  4) deepseek-r1-8b (8B parameters, reasoning-focused)
-
-"@ -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "Select your default model:" -ForegroundColor Cyan
+    Write-Host "  1) gpt-oss-120b (120B parameters, powerful) - Recommended"
+    Write-Host "  2) gpt-oss-20b  (20B parameters, faster)"
+    Write-Host "  3) llama-3.2-3b (3B parameters, fastest)"
+    Write-Host "  4) deepseek-r1-8b (8B parameters, reasoning)"
+    Write-Host ""
 
     while ($true) {
-        $choice = Read-Host "Enter choice (1-4) [1]"
+        Write-Host "Enter choice (1-4) or press Enter for default [1]: " -NoNewline
+        $choice = Read-Host
         $choice = if ([string]::IsNullOrWhiteSpace($choice)) { "1" } else { $choice }
 
         switch ($choice) {
@@ -110,31 +118,34 @@ Select your default model:
     }
 }
 
+# Update .env file
 function Update-EnvFile {
     param([string]$ApiKey)
 
+    Write-Host ""
+
     if (Test-Path $EnvFile) {
-        # Backup existing .env
-        $backupFile = "$EnvFile.backup.$((Get-Date).Ticks)"
+        $backupFile = "$EnvFile.backup.$(Get-Date -Format 'yyyyMMddHHmmss')"
         Copy-Item $EnvFile $backupFile
-        Print-Info "Backed up existing .env file"
+        Write-Host "Backed up .env to: $backupFile" -ForegroundColor Yellow
     }
 
-    # Read existing content or create new
+    # Read existing content
     $envContent = if (Test-Path $EnvFile) { Get-Content $EnvFile } else { @() }
 
-    # Remove existing OPENGPU_API_KEY line if present
+    # Remove existing OPENGPU_API_KEY
     $envContent = $envContent | Where-Object { $_ -notmatch "^OPENGPU_API_KEY=" }
 
     # Add new API key
     $envContent += "OPENGPU_API_KEY=$ApiKey"
 
     # Write back
-    $envContent | Out-File -FilePath $EnvFile -Encoding UTF8
+    $envContent | Set-Content -Path $EnvFile
 
-    Print-Success "Updated .env file with OpenGPU API key"
+    Print-Success ".env file updated"
 }
 
+# Create OpenClaw config
 function New-OpenClawConfig {
     param(
         [string]$ApiKey,
@@ -149,137 +160,115 @@ function New-OpenClawConfig {
 
     $config = @"
 {
-  // OpenClaw + OpenGPU Relay Configuration
-  // Generated by configure-opengpu.ps1
-
-  identity: {
-    name: "Clawd",
-    theme: "helpful assistant",
-    emoji: "🦞",
+  "env": {
+    "OPENGPU_API_KEY": "${ApiKey}"
   },
-
-  // OpenGPU Relay API Configuration
-  env: {
-    OPENGPU_API_KEY: "${ApiKey}",
-  },
-
-  // Agent configuration with OpenGPU model
-  agents: {
-    defaults: {
-      model: {
-        primary: "${DefaultModel}",
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "${DefaultModel}"
       },
-      // Security: Sandbox all tool execution
-      sandbox: {
-        mode: "all",
-        scope: "agent",
-        workspaceAccess: "none",
+      "sandbox": {
+        "mode": "all",
+        "scope": "agent",
+        "workspaceAccess": "none"
       },
-      // Security: Require human approval for dangerous tools
-      tools: {
-        confirm: "always",
-      },
-      // Security: DM policy - pairing required by default
-      dmPolicy: "pairing",
-      workspace: "~/.openclaw/workspace",
+      "workspace": "~/.openclaw/workspace"
     },
+    "list": [
+      {
+        "id": "main",
+        "identity": {
+          "name": "Clawd",
+          "theme": "helpful assistant",
+          "emoji": "🦞"
+        }
+      }
+    ]
   },
-
-  // Channel configurations
-  channels: {
-    telegram: {
-      dmPolicy: "pairing",
-    },
-    discord: {
-      dmPolicy: "pairing",
-    },
-    whatsapp: {
-      dmPolicy: "pairing",
-    },
+  "gateway": {
+    "mode": "local",
+    "bind": "loopback",
+    "port": 18789
   },
-
-  // Gateway settings
-  gateway: {
-    mode: "local",
-    bind: "lan",
-    port: 18789,
-  },
-
-  // Logging
-  logging: {
-    level: "info",
-    consoleLevel: "info",
-    consoleStyle: "pretty",
-    redactSensitive: "tools",
-  },
+  "logging": {
+    "level": "info",
+    "consoleLevel": "info",
+    "consoleStyle": "pretty",
+    "redactSensitive": "tools"
+  }
 }
 "@
 
-    $config | Out-File -FilePath $ConfigFile -Encoding UTF8
+    $config | Set-Content -Path $ConfigFile
 
-    Print-Success "Created OpenClaw configuration at $ConfigFile"
+    Print-Success "Configuration created at: $ConfigFile"
 }
 
-function Test-Connection {
-    if (!(Test-Path $EnvFile)) {
-        Print-Error "No .env file found. Please configure OpenGPU first."
+# View current configuration
+function View-Config {
+    Write-Host ""
+
+    if (Test-Path $EnvFile) {
+        Write-Host "=== Current .env file ===" -ForegroundColor Cyan
+        Get-Content $EnvFile
+    } else {
+        Print-Info "No .env file found at $EnvFile"
+    }
+
+    Write-Host ""
+    Write-Host "=== Current OpenClaw config ===" -ForegroundColor Cyan
+    if (Test-Path $ConfigFile) {
+        Get-Content $ConfigFile
+    } else {
+        Print-Info "No OpenClaw configuration found at $ConfigFile"
+    }
+}
+
+# Test OpenGPU connection using key from .env
+function Test-OpenGpuConnection {
+    if (-not (Test-Path $EnvFile)) {
+        Print-Error "No .env file found at $EnvFile. Please configure OpenGPU first (option 1)."
         return
     }
 
     $envContent = Get-Content $EnvFile
-    $apiKeyLine = $envContent | Where-Object { $_ -match "^OPENGPU_API_KEY=" }
-
-    if ([string]::IsNullOrWhiteSpace($apiKeyLine)) {
-        Print-Error "No OpenGPU API key found in .env file"
+    $apiLine = $envContent | Where-Object { $_ -match "^OPENGPU_API_KEY=" }
+    if (-not $apiLine) {
+        Print-Error "No OPENGPU_API_KEY found in .env. Please configure OpenGPU first (option 1)."
         return
     }
 
-    $apiKey = ($apiKeyLine -split "=")[1]
+    $apiKey = $apiLine.Split("=", 2)[1]
+    if ([string]::IsNullOrWhiteSpace($apiKey)) {
+        Print-Error "OPENGPU_API_KEY in .env is empty."
+        return
+    }
 
-    Write-Host "Testing OpenGPU Relay connection..." -ForegroundColor Cyan
+    Write-Host ""
+    Print-Info "Testing OpenGPU Relay connection..."
 
-    try {
-        $headers = @{
-            "Authorization" = "Bearer $ApiKey"
-        }
-
-        $response = Invoke-RestMethod -Uri "https://relay.opengpu.network/v1/models" `
-            -Headers $headers `
-            -TimeoutSec 10
-
-        $response | ConvertTo-Json -Depth 10
-
+    if (Test-OpenGpuKey -ApiKey $apiKey) {
         Print-Success "OpenGPU Relay connection successful!"
-    }
-    catch {
-        Print-Error "Failed to connect to OpenGPU Relay: $_"
-    }
-}
-
-function Show-Config {
-    if (Test-Path $ConfigFile) {
-        Write-Host "Current OpenClaw configuration:" -ForegroundColor Cyan
-        Write-Host ""
-        Get-Content $ConfigFile
-    }
-    else {
-        Print-Warning "No OpenClaw configuration found at $ConfigFile"
+    } else {
+        Print-Error "Failed to validate OpenGPU API key against OpenGPU Relay."
     }
 }
 
-function Remove-Config {
-    Write-Host "This will remove OpenGPU configuration from:" -ForegroundColor Yellow
+# Remove OpenGPU configuration
+function Remove-OpenGpuConfig {
+    Write-Host ""
+    Print-Info "This will remove OpenGPU configuration from:"
     Write-Host "  - $EnvFile"
     Write-Host "  - $ConfigFile"
     Write-Host ""
-
     $confirm = Read-Host "Are you sure? (y/n)"
 
     if ($confirm -eq "y" -or $confirm -eq "Y") {
         if (Test-Path $EnvFile) {
             $envContent = Get-Content $EnvFile | Where-Object { $_ -notmatch "^OPENGPU_API_KEY=" }
-            $envContent | Out-File -FilePath $EnvFile -Encoding UTF8
-            Print-Success "Removed OpenGPU API key from .env"
+            $envContent | Set-Content -Path $EnvFile
+            Print-Success "Removed OPENGPU_API_KEY from .env"
         }
 
         if (Test-Path $ConfigFile) {
@@ -287,147 +276,102 @@ function Remove-Config {
             Print-Success "Removed OpenClaw configuration file"
         }
 
-        Print-Info "You can now reconfigure OpenClaw with .\docker-setup.sh"
-    }
-    else {
+        Print-Info "You can now reconfigure OpenClaw with ./docker-setup.sh"
+    } else {
         Print-Info "Operation cancelled"
     }
-}
-
-function Show-Menu {
-    Write-Host @"
-
-OpenGPU Relay Configuration Menu:
-  1) Configure OpenGPU API key
-  2) Select default model
-  3) View current configuration
-  4) Test OpenGPU connection
-  5) Remove OpenGPU configuration
-  6) Exit
-
-"@ -ForegroundColor Cyan
 }
 
 # Main function
 function Main {
     Print-Header
 
-    # Check dependencies
-    if (!(Get-Command docker -ErrorAction SilentlyContinue)) {
+    # Check Docker
+    $docker = Get-Command docker -ErrorAction SilentlyContinue
+    if (-not $docker) {
         Print-Error "Docker is not installed. Please install Docker Desktop first."
+        Read-Host "Press Enter to exit"
         exit 1
     }
 
-    Print-Info "OpenClaw + OpenGPU Relay Configuration"
     Print-Info "This will configure OpenClaw to use OpenGPU Network's Relay API"
     Write-Host ""
 
-    # Check if already configured
-    $alreadyConfigured = $false
     if (Test-Path $EnvFile) {
         $envContent = Get-Content $EnvFile
-        $apiKeyLine = $envContent | Where-Object { $_ -match "^OPENGPU_API_KEY=" }
-        if ($apiKeyLine) {
-            Print-Success "OpenGPU is already configured!"
-            Write-Host ""
-            Write-Host "What would you like to do?"
-            Write-Host "  1) Reconfigure OpenGPU (update API key/model)"
-            Write-Host "  2) View current configuration"
-            Write-Host "  3) Exit to menu"
-            Write-Host ""
-
-            $initialChoice = Read-Host "Enter choice [3]"
-            $initialChoice = if ([string]::IsNullOrWhiteSpace($initialChoice)) { "3" } else { $initialChoice }
-
-            switch ($initialChoice) {
-                "1" {
-                    # Continue to main configuration flow
-                    $alreadyConfigured = $false
-                }
-                "2" {
-                    Show-Config
-                    return
-                }
-                "3" {
-                    # Show menu loop
-                    $alreadyConfigured = $true
-                }
-                default {
-                    Print-Error "Invalid choice"
-                    exit 1
-                }
-            }
+        $hasKey = $envContent | Where-Object { $_ -match "^OPENGPU_API_KEY=" }
+        if ($hasKey) {
+            Print-Success "OpenGPU is already configured (API key found in .env)."
+        } else {
+            Print-Info "No OPENGPU_API_KEY found in .env. Use option 1 to configure it."
         }
+    } else {
+        Print-Info "No .env file found yet. Use option 1 to configure OpenGPU."
     }
 
-    if ($alreadyConfigured) {
-        # Menu loop
-        while ($true) {
-            Show-Menu
-            $choice = Read-Host "Enter choice"
+    while ($true) {
+        Show-Menu
+        $choice = Read-Host "Enter choice [1]"
+        $choice = if ([string]::IsNullOrWhiteSpace($choice)) { "1" } else { $choice }
 
-            switch ($choice) {
-                "1" {
-                    try {
-                        $apiKey = Get-OpenGpuApiKey
-                        $model = Select-Model
-                        Update-EnvFile -ApiKey $apiKey
-                        New-OpenClawConfig -ApiKey $apiKey -DefaultModel $model
-                        Print-Success "Configuration updated!"
-                    }
-                    catch {
-                        Print-Error "Configuration cancelled: $_"
-                    }
-                }
-                "2" {
+        switch ($choice) {
+            "1" {
+                try {
+                    Write-Host ""
+                    Write-Host "=== Step 1: API Key ===" -ForegroundColor Cyan
+                    $apiKey = Get-OpenGpuApiKey
+
+                    Write-Host ""
+                    Write-Host "=== Step 2: Select Model ===" -ForegroundColor Cyan
                     $model = Select-Model
-                    Print-Success "Model selected: $model"
-                    Print-Info "Run option 1 to apply this model"
+                    Write-Host "Selected model: $model" -ForegroundColor Green
+
+                    Write-Host ""
+                    Write-Host "=== Step 3: Update Configuration ===" -ForegroundColor Cyan
+                    Update-EnvFile -ApiKey $apiKey
+                    New-OpenClawConfig -ApiKey $apiKey -DefaultModel $model
+
+                    Write-Host ""
+                    Write-Host "========================================" -ForegroundColor Green
+                    Write-Host "  Configuration Complete!" -ForegroundColor Green
+                    Write-Host "========================================" -ForegroundColor Green
+                    Write-Host ""
+                    Write-Host "Your model: $model"
+                    Write-Host ""
+                    Write-Host "Next steps:" -ForegroundColor Cyan
+                    Write-Host "  1. Restart the gateway:"
+                    Write-Host "     docker compose restart"
+                    Write-Host ""
+                    Write-Host "  2. Or start it:"
+                    Write-Host "     docker compose up -d"
+                    Write-Host ""
+                    Write-Host "  3. Dashboard:"
+                    Write-Host "     http://localhost:18789"
+                    Write-Host ""
                 }
-                "3" {
-                    Show-Config
-                }
-                "4" {
-                    Test-Connection
-                }
-                "5" {
-                    Remove-Config
-                }
-                "6" {
-                    Print-Info "Exiting..."
-                    return
-                }
-                default {
-                    Print-Error "Invalid choice"
+                catch {
+                    Write-Host ""
+                    Print-Error "Configuration failed: $_"
                 }
             }
-        }
-    }
-    else {
-        # First-time configuration flow
-        try {
-            $apiKey = Get-OpenGpuApiKey
-            $model = Select-Model
-            Update-EnvFile -ApiKey $apiKey
-            New-OpenClawConfig -ApiKey $apiKey -DefaultModel $model
-
-            Write-Host ""
-            Print-Success "OpenGPU Relay configuration complete!"
-            Write-Host ""
-            Write-Host "Next steps:"
-            Write-Host "  1. Run: .\docker-setup.sh"
-            Write-Host "  2. OpenClaw will start with OpenGPU as your LLM provider"
-            Write-Host ""
-            Write-Host "Your default model: $model"
-            Write-Host ""
-            Print-Info "To configure Telegram/Discord/WhatsApp channels:"
-            Write-Host "  docker compose run --rm openclaw-cli channels login       # WhatsApp (QR)"
-            Write-Host "  docker compose run --rm openclaw-cli channels add --channel telegram --token <token>"
-            Write-Host "  docker compose run --rm openclaw-cli channels add --channel discord --token <token>"
-        }
-        catch {
-            Print-Error "Configuration failed: $_"
-            exit 1
+            "2" {
+                View-Config
+                Read-Host "Press Enter to return to the menu"
+            }
+            "3" {
+                Test-OpenGpuConnection
+                Read-Host "Press Enter to return to the menu"
+            }
+            "4" {
+                Remove-OpenGpuConfig
+                Read-Host "Press Enter to return to the menu"
+            }
+            "5" {
+                return
+            }
+            default {
+                Print-Error "Invalid choice. Please enter 1-5."
+            }
         }
     }
 }

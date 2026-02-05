@@ -220,7 +220,7 @@ create_openclaw_config() {
   // Gateway settings
   gateway: {
     mode: "local",
-    bind: "lan",
+    bind: "loopback",
     port: 18789,
   },
 
@@ -241,12 +241,11 @@ EOF
 show_menu() {
     echo ""
     echo "OpenGPU Relay Configuration Menu:"
-    echo "  1) Configure OpenGPU API key"
-    echo "  2) Select default model"
-    echo "  3) View current configuration"
-    echo "  4) Test OpenGPU connection"
-    echo "  5) Remove OpenGPU configuration"
-    echo "  6) Exit"
+    echo "  1) Configure or update OpenGPU (API key + default model)"
+    echo "  2) View current configuration"
+    echo "  3) Test OpenGPU connection"
+    echo "  4) Remove OpenGPU configuration"
+    echo "  5) Exit"
     echo ""
 }
 
@@ -336,61 +335,55 @@ main() {
     print_info "This will configure OpenClaw to use OpenGPU Network's Relay API"
     echo ""
 
-    # Check if already configured
     if check_env_file; then
-        print_success "OpenGPU is already configured!"
-        echo ""
-        echo "What would you like to do?"
-        echo "  1) Reconfigure OpenGPU (update API key/model)"
-        echo "  2) View current configuration"
-        echo "  3) Exit"
-        echo ""
-        echo -n "Enter choice [3]: "
-        read -r initial_choice
-        initial_choice=${initial_choice:-3}
+        print_success "OpenGPU is already configured (API key found in .env)."
+    else
+        print_warning "No OpenGPU API key found yet. Use option 1 to configure it."
+    fi
 
-        case $initial_choice in
+    while true; do
+        show_menu
+        echo -n "Enter choice [1]: "
+        read -r choice
+        choice=${choice:-1}
+
+        case "$choice" in
             1)
-                # Continue to main configuration flow
+                if ! prompt_api_key; then
+                    print_error "Configuration cancelled"
+                else
+                    select_model
+                    update_env_file
+                    create_openclaw_config
+                    echo ""
+                    print_success "OpenGPU Relay configuration complete!"
+                    echo ""
+                    echo "Your default model: $DEFAULT_MODEL"
+                    echo ""
+                    echo "Next steps:"
+                    echo "  1. Run: ./docker-setup.sh"
+                    echo "  2. OpenClaw will start with OpenGPU as your LLM provider"
+                    echo ""
+                fi
                 ;;
             2)
                 view_config
-                exit 0
                 ;;
             3)
+                test_connection
+                ;;
+            4)
+                remove_config
+                ;;
+            5)
                 print_info "Exiting..."
-                exit 0
+                break
                 ;;
             *)
-                print_error "Invalid choice"
-                exit 1
+                print_error "Invalid choice. Please enter 1-5"
                 ;;
         esac
-    fi
-
-    # Configuration flow
-    if ! prompt_api_key; then
-        print_error "Configuration cancelled"
-        exit 1
-    fi
-
-    select_model
-    update_env_file
-    create_openclaw_config
-
-    echo ""
-    print_success "OpenGPU Relay configuration complete!"
-    echo ""
-    echo "Next steps:"
-    echo "  1. Run: ./docker-setup.sh"
-    echo "  2. OpenClaw will start with OpenGPU as your LLM provider"
-    echo ""
-    echo "Your default model: $DEFAULT_MODEL"
-    echo ""
-    print_info "To configure Telegram/Discord/WhatsApp channels:"
-    echo "  docker compose run --rm openclaw-cli channels login       # WhatsApp (QR)"
-    echo "  docker compose run --rm openclaw-cli channels add --channel telegram --token <token>"
-    echo "  docker compose run --rm openclaw-cli channels add --channel discord --token <token>"
+    done
 }
 
 # Run main if not sourced
