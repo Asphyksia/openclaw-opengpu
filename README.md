@@ -182,6 +182,51 @@ MIT License - see [LICENSE](LICENSE)
 
 ---
 
+## 🔧 Troubleshooting
+
+### Docker build fails with ".npmrc not found"
+
+**Error:** `failed to compute cache key: "/.npmrc": not found`
+
+**Solution:** This has been fixed in the latest version. If you encounter this:
+```bash
+git pull origin main
+./docker-setup.sh
+```
+
+### Docker daemon not running
+
+**Error (Windows):** `open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified`
+
+**Solution:** Start Docker Desktop:
+1. Open **Docker Desktop** from Start Menu
+2. Wait for the Docker icon to show as active in the taskbar
+3. Run `docker ps` to verify it's working
+4. Try `./docker-setup.sh` again
+
+### Docker build fails with network errors
+
+**Error:** `failed to solve: executor: failed to register`
+
+**Solution:** Check your internet connection and try:
+```bash
+docker system prune -f
+./docker-setup.sh
+```
+
+### OpenGPU API key issues
+
+If the OpenGPU configuration fails:
+1. Get your API key at [relaygpu.com](https://relaygpu.com)
+2. Run the configuration script manually:
+```bash
+./scripts/configure-opengpu.sh
+```
+
+For more help, join the [Discord community](https://discord.gg/clawd).
+
+---
+
 <p align="center">
   <i>OpenClaw + OpenGPU — Personal AI for everyone</i>
   <br>
