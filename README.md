@@ -13,11 +13,23 @@ Run your own AI assistant with [OpenClaw](https://github.com/openclaw/openclaw) 
 
 ## Quick Start
 
+### Linux / macOS / WSL2
+
 ```bash
 git clone https://github.com/Asphyksia/openclaw-opengpu.git
 cd openclaw-opengpu
 ./setup.sh
 ```
+
+### Windows (PowerShell)
+
+```powershell
+git clone https://github.com/Asphyksia/openclaw-opengpu.git
+cd openclaw-opengpu
+.\setup.ps1
+```
+
+> **Requires**: [Docker Desktop](https://www.docker.com/products/docker-desktop/) running. WSL2 backend recommended.
 
 The setup wizard will:
 1. Ask for your **OpenGPU API key** ([get one here](https://relaygpu.com))
@@ -25,12 +37,6 @@ The setup wizard will:
 3. Pull the official OpenClaw image and start the gateway
 
 That's it. You're running.
-
-### Windows (WSL2)
-
-1. Install [WSL2](https://learn.microsoft.com/en-us/windows/wsl/install) with Ubuntu
-2. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) with WSL2 backend enabled
-3. Open Ubuntu terminal and run the commands above
 
 ## Available Models
 
@@ -86,11 +92,93 @@ Then restart: `docker compose restart openclaw-gateway`
 - **Telegram**: Send a message to your bot, check the logs for your user ID
 - **Discord**: Enable Developer Mode → right-click your name → Copy User ID
 
+## Already have OpenClaw installed?
+
+If you already have OpenClaw running and just want to add OpenGPU Relay as a provider, add this to your `openclaw.json` under `"models"`:
+
+```json
+{
+  "models": {
+    "providers": {
+      "relaygpu-anthropic": {
+        "baseUrl": "https://relay.opengpu.network/v2/anthropic/v1/",
+        "apiKey": "YOUR_OPENGPU_API_KEY",
+        "api": "anthropic-messages",
+        "models": [
+          {
+            "id": "anthropic/claude-opus-4-6",
+            "name": "Claude Opus 4-6 (OpenGPU Relay)",
+            "api": "anthropic-messages",
+            "reasoning": true,
+            "input": ["text"],
+            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 400000,
+            "maxTokens": 128000
+          },
+          {
+            "id": "anthropic/claude-sonnet-4-6",
+            "name": "Claude Sonnet 4-6 (OpenGPU Relay)",
+            "api": "anthropic-messages",
+            "reasoning": true,
+            "input": ["text"],
+            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 200000,
+            "maxTokens": 64000
+          }
+        ]
+      },
+      "relaygpu-openai": {
+        "baseUrl": "https://relay.opengpu.network/v2/openai/v1/",
+        "apiKey": "YOUR_OPENGPU_API_KEY",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "openai/gpt-5.2",
+            "name": "GPT-5.2 (OpenGPU Relay)",
+            "api": "openai-completions",
+            "reasoning": true,
+            "input": ["text"],
+            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 128000,
+            "maxTokens": 65536
+          },
+          {
+            "id": "deepseek-ai/DeepSeek-V3.1",
+            "name": "DeepSeek V3.1 (OpenGPU Relay)",
+            "api": "openai-completions",
+            "reasoning": true,
+            "input": ["text"],
+            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 128000,
+            "maxTokens": 65536
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+Then set your default model:
+
+```json
+"agents": {
+  "defaults": {
+    "model": {
+      "primary": "relaygpu-anthropic/anthropic/claude-opus-4-6"
+    }
+  }
+}
+```
+
+Restart your gateway and you're good to go. Get your API key at [relaygpu.com](https://relaygpu.com).
+
 ## Project Structure
 
 ```
 openclaw-opengpu/
-├── setup.sh              # Interactive setup wizard
+├── setup.sh              # Setup wizard (Linux/macOS/WSL2)
+├── setup.ps1             # Setup wizard (Windows PowerShell)
 ├── docker-compose.yml    # Uses official OpenClaw image
 ├── .env.example          # Environment template
 ├── docs/
