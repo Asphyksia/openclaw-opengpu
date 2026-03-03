@@ -1,55 +1,43 @@
 # Available Models
 
-OpenGPU Relay exposes models through two API endpoints, matching the native APIs of each provider.
+*Auto-generated from the [OpenGPU Relay API](https://relay.opengpu.network/v2/models) — last updated 2026-03-04*
 
-## Anthropic Models (via `relaygpu-anthropic`)
+## Anthropic Models (`relaygpu-anthropic`)
 
 Base URL: `https://relay.opengpu.network/v2/anthropic/v1/`
 
-### Claude Opus 4-6
-- **ID**: `anthropic/claude-opus-4-6`
-- **Context window**: 400,000 tokens
-- **Max output**: 128,000 tokens
-- **Reasoning**: ✅
-- **Best for**: Complex tasks, coding, analysis, creative work
+| Model | ID | Input $/1M | Output $/1M |
+|-------|----|-----------|------------|
+| **anthropic/claude-opus-4-6** | `anthropic/claude-opus-4-6` | $5.0 | $25.0 |
+| **anthropic/claude-sonnet-4-6** | `anthropic/claude-sonnet-4-6` | $3.0 | $15.0 |
 
-### Claude Sonnet 4-6
-- **ID**: `anthropic/claude-sonnet-4-6`
-- **Context window**: 200,000 tokens
-- **Max output**: 64,000 tokens
-- **Reasoning**: ✅
-- **Best for**: Balanced performance, everyday tasks
-
-## OpenAI-compatible Models (via `relaygpu-openai`)
+## OpenAI-compatible Models (`relaygpu-openai`)
 
 Base URL: `https://relay.opengpu.network/v2/openai/v1/`
 
-### GPT-5.2
-- **ID**: `openai/gpt-5.2`
-- **Context window**: 128,000 tokens
-- **Max output**: 65,536 tokens
-- **Reasoning**: ✅
-- **Best for**: General purpose, broad knowledge
-
-### DeepSeek V3.1
-- **ID**: `deepseek-ai/DeepSeek-V3.1`
-- **Context window**: 128,000 tokens
-- **Max output**: 65,536 tokens
-- **Reasoning**: ✅
-- **Best for**: Math, logic, code, reasoning tasks
+| Model | ID | Input $/1M | Output $/1M |
+|-------|----|-----------|------------|
+| **openai/gpt-5.2** | `openai/gpt-5.2` | $1.75 | $14.0 |
+| **deepseek-ai/DeepSeek-V3.1** | `deepseek-ai/DeepSeek-V3.1` | $0.55 | $1.66 |
+| **Qwen/Qwen3-Coder** | `Qwen/Qwen3-Coder` | $1.3 | $5.0 |
+| **moonshotai/kimi-k2.5** | `moonshotai/kimi-k2.5` | $0.55 | $2.95 |
+| **qwen/qwen2.5-vl-72b-instruct** | `qwen/qwen2.5-vl-72b-instruct` | $2.1 | $6.7 |
 
 ## Switching Models
 
-In chat, use the `/model` command:
+In chat, use `/model`:
 
 ```
 /model relaygpu-anthropic/anthropic/claude-opus-4-6
 /model relaygpu-anthropic/anthropic/claude-sonnet-4-6
 /model relaygpu-openai/openai/gpt-5.2
 /model relaygpu-openai/deepseek-ai/DeepSeek-V3.1
+/model relaygpu-openai/Qwen/Qwen3-Coder
+/model relaygpu-openai/moonshotai/kimi-k2.5
+/model relaygpu-openai/qwen/qwen2.5-vl-72b-instruct
 ```
 
-## Changing the Default Model
+## Changing the Default
 
 Edit `~/.openclaw/openclaw.json`:
 
@@ -57,7 +45,7 @@ Edit `~/.openclaw/openclaw.json`:
 "agents": {
   "defaults": {
     "model": {
-      "primary": "relaygpu-openai/openai/gpt-5.2"
+      "primary": "relaygpu-anthropic/anthropic/claude-opus-4-6"
     }
   }
 }
@@ -65,8 +53,8 @@ Edit `~/.openclaw/openclaw.json`:
 
 Then restart: `docker compose restart openclaw-gateway`
 
-## Cost
+## Pricing
 
-All models are available through OpenGPU Relay at pay-as-you-go rates, significantly cheaper than direct API access or subscription plans.
+All pricing is pay-as-you-go via [relaygpu.com](https://relaygpu.com). No subscriptions.
 
-Check your usage at [relaygpu.com](https://relaygpu.com).
+Live pricing: `curl https://relay.opengpu.network/v2/pricing`

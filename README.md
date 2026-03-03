@@ -40,14 +40,17 @@ That's it. You're running.
 
 ## Available Models
 
-| Model | Provider | Context | Max Output |
-|-------|----------|---------|------------|
-| **Claude Opus 4-6** | Anthropic | 400K | 128K |
-| Claude Sonnet 4-6 | Anthropic | 200K | 64K |
-| GPT-5.2 | OpenAI | 128K | 65K |
-| DeepSeek V3.1 | DeepSeek | 128K | 65K |
+| Model | ID | Input $/1M | Output $/1M |
+|-------|----|-----------|------------|
+| **Claude Opus 4-6** | `anthropic/claude-opus-4-6` | $5.00 | $25.00 |
+| **Claude Sonnet 4-6** | `anthropic/claude-sonnet-4-6` | $3.00 | $15.00 |
+| **GPT-5.2** | `openai/gpt-5.2` | $1.75 | $14.00 |
+| **DeepSeek V3.1** | `deepseek-ai/DeepSeek-V3.1` | $0.55 | $1.66 |
+| **Qwen3 Coder** | `Qwen/Qwen3-Coder` | $1.30 | $5.00 |
+| **Kimi K2.5** | `moonshotai/kimi-k2.5` | $0.55 | $2.95 |
+| **Qwen2.5 VL 72B** | `qwen/qwen2.5-vl-72b-instruct` | $2.10 | $6.70 |
 
-All models include reasoning capabilities. Default: **Claude Opus 4-6**.
+All models include reasoning. Default: **Claude Opus 4-6**. Pricing auto-updates from the [OpenGPU Relay API](https://relay.opengpu.network/v2/pricing).
 
 Switch models anytime in chat:
 ```
@@ -145,6 +148,36 @@ If you already have OpenClaw running and just want to add OpenGPU Relay as a pro
           {
             "id": "deepseek-ai/DeepSeek-V3.1",
             "name": "DeepSeek V3.1 (OpenGPU Relay)",
+            "api": "openai-completions",
+            "reasoning": true,
+            "input": ["text"],
+            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 128000,
+            "maxTokens": 65536
+          },
+          {
+            "id": "Qwen/Qwen3-Coder",
+            "name": "Qwen3 Coder (OpenGPU Relay)",
+            "api": "openai-completions",
+            "reasoning": true,
+            "input": ["text"],
+            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 128000,
+            "maxTokens": 65536
+          },
+          {
+            "id": "moonshotai/kimi-k2.5",
+            "name": "Kimi K2.5 (OpenGPU Relay)",
+            "api": "openai-completions",
+            "reasoning": true,
+            "input": ["text"],
+            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 128000,
+            "maxTokens": 65536
+          },
+          {
+            "id": "qwen/qwen2.5-vl-72b-instruct",
+            "name": "Qwen2.5 VL 72B (OpenGPU Relay)",
             "api": "openai-completions",
             "reasoning": true,
             "input": ["text"],
