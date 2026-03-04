@@ -11,17 +11,26 @@ Run your own AI assistant with [OpenClaw](https://github.com/openclaw/openclaw) 
 - **Multi-channel**: Telegram, WhatsApp, Discord, Slack, Signal, and more
 - Uses the **official OpenClaw Docker image** — always up to date
 
-## Quick Start
+## Install
 
-### Linux / macOS / WSL2
+Pick the method that fits your setup:
+
+### Option 1: Docker (recommended)
+
+Best for most users. No Node.js needed — just Docker.
+
+<details>
+<summary><strong>Linux / macOS / WSL2</strong></summary>
 
 ```bash
 git clone https://github.com/Asphyksia/openclaw-opengpu.git
 cd openclaw-opengpu
 ./setup.sh
 ```
+</details>
 
-### Windows (PowerShell)
+<details>
+<summary><strong>Windows (PowerShell)</strong></summary>
 
 ```powershell
 git clone https://github.com/Asphyksia/openclaw-opengpu.git
@@ -29,7 +38,8 @@ cd openclaw-opengpu
 .\setup.ps1
 ```
 
-> **Requires**: [Docker Desktop](https://www.docker.com/products/docker-desktop/) running. WSL2 backend recommended.
+> Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/) with WSL2 backend.
+</details>
 
 The setup wizard will:
 1. Ask for your **OpenGPU API key** ([get one here](https://relaygpu.com))
@@ -37,6 +47,57 @@ The setup wizard will:
 3. Pull the official OpenClaw image and start the gateway
 
 That's it. You're running.
+
+### Option 2: One-liner install (no Docker)
+
+If you prefer running OpenClaw natively without Docker:
+
+<details>
+<summary><strong>macOS / Linux / WSL2</strong></summary>
+
+```bash
+curl -fsSL https://openclaw.ai/install.sh | bash
+```
+
+Then configure OpenGPU Relay (see [Already have OpenClaw?](#already-have-openclaw-installed) below).
+</details>
+
+<details>
+<summary><strong>Windows (PowerShell)</strong></summary>
+
+```powershell
+iwr -useb https://openclaw.ai/install.ps1 | iex
+```
+
+Then configure OpenGPU Relay (see [Already have OpenClaw?](#already-have-openclaw-installed) below).
+</details>
+
+The installer handles Node.js detection, installation, and onboarding automatically.
+
+### Option 3: npm / pnpm (manual)
+
+If you already have Node.js 22+ installed:
+
+<details>
+<summary><strong>npm</strong></summary>
+
+```bash
+npm install -g openclaw@latest
+openclaw onboard --install-daemon
+```
+</details>
+
+<details>
+<summary><strong>pnpm</strong></summary>
+
+```bash
+pnpm add -g openclaw@latest
+pnpm approve-builds -g
+openclaw onboard --install-daemon
+```
+</details>
+
+After installing, add the OpenGPU Relay config from the [Already have OpenClaw?](#already-have-openclaw-installed) section below.
 
 ## Available Models
 
